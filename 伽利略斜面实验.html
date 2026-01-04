@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>伽利略斜面实验模拟</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#F59E0B',
+            dark: '#1E293B',
+            light: '#F8FAFC'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .shadow-soft {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      }
+      .triangle-ramp {
+        clip-path: polygon(0 0, 100% 100%, 0 100%);
+      }
+      .trail-marker {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        background-color: rgba(59, 130, 246, 0.8);
+        border-radius: 50%;
+        z-index: 10;
+      }
+      /* 摩擦系数对应的斜面材质 */
+      .ramp-high-friction {
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23555555' fill-opacity='0.3' fill-rule='evenodd'/%3E%3C/svg%3E");
+        background-color: #8B7D6B;
+      }
+      .ramp-medium-friction {
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        background-color: #A9A9A9;
+      }
+      .ramp-low-friction {
+        background-image: url("data:image/svg+xml,%3Csvg width='84' height='48' viewBox='0 0 84 48' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h12v6H0V0zm28 8h12v6H28V8zm14-8h12v6H42V0zm14 0h12v6H56V0zm0 8h12v6H56V8zM42 8h12v6H42V8zm0 16h12v6H42v-6zm14-8h12v6H56v-6zm14 0h12v6H70v-6zm0 16h12v6H70v-6zM28 32h12v6H28v-6zM14 16h12v6H14v-6zM0 24h12v6H0v-6zm0 8h12v6H0v-6zm14 0h12v6H14v-6zm14 8h12v6H28v-6zm-14 0h12v6H14v-6zm28 0h12v6H42v-6zm14-8h12v6H56v-6zm0-8h12v6H56v-6zm14 8h12v6H70v-6zm0 8h12v6H70v-6zM14 24h12v6H14v-6zm14-8h12v6H28v-6zM14 8h12v6H14V8zM0 8h12v6H0V8z' fill='%23cccccc' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E");
+        background-color: #D3D3D3;
+      }
+    }
+  </style>
+</head>
+
+    <body class="bg-light font-sans text-dark">
+  <!-- 顶部导航 -->
+  <header class="bg-white shadow-md fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-flask text-primary text-2xl"></i>
+        <h1 class="text-xl md:text-2xl font-bold text-primary">伽利略斜面实验模拟</h1>
+      </div>
+      
+      <!-- 添加返回首页按钮 -->
+      <a href="首页.html" class="ml-4 text-sm bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-all duration-300">
+        <i class="fa fa-home mr-1"></i> 返回首页
+      </a>
+      
+      <nav class="hidden md:flex space-x-6">
+        <a href="#" class="text-dark hover:text-primary transition-all duration-300">首页</a>
+        <a href="#about" class="text-dark hover:text-primary transition-all duration-300">实验介绍</a>
+        <a href="#conclusion" class="text-dark hover:text-primary transition-all duration-300">实验结论</a>
+      </nav>
+      <button class="md:hidden text-dark text-xl">
+        <i class="fa fa-bars"></i>
+      </button>
+    </div>
+  </header>
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-flask text-primary text-2xl"></i>
+        <h1 class="text-xl md:text-2xl font-bold text-primary">伽利略斜面实验模拟</h1>
+      </div>
+      <nav class="hidden md:flex space-x-6">
+        <a href="#" class="text-dark hover:text-primary transition-all duration-300">首页</a>
+        <a href="#about" class="text-dark hover:text-primary transition-all duration-300">实验介绍</a>
+        <a href="#conclusion" class="text-dark hover:text-primary transition-all duration-300">实验结论</a>
+      </nav>
+      <button class="md:hidden text-dark text-xl">
+        <i class="fa fa-bars"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="container mx-auto px-4 pt-24 pb-16">
+    <!-- 实验介绍 -->
+    <section id="about" class="mb-12 bg-white rounded-xl p-6 shadow-soft">
+      <h2 class="text-2xl font-bold mb-4 text-primary">实验背景</h2>
+      <p class="mb-4">伽利略斜面实验是物理学史上著名的实验之一，通过观察小球在斜面上的运动，伽利略推翻了亚里士多德关于"力是维持物体运动的原因"的观点，为牛顿力学的建立奠定了基础。</p>
+      <p>本模拟器包含三个实验，分别探究小球质量、斜面角度和摩擦系数对小球运动的影响，小球将从斜面左上方滑下，沿斜面向右下方运动。请完成所有实验以查看结论。</p>
+    </section>
+
+    <!-- 实验选择区 -->
+    <section class="mb-8">
+      <h2 class="text-xl font-bold mb-4">选择实验</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button id="exp1-btn" class="exp-btn bg-primary text-white py-3 px-6 rounded-lg shadow-soft hover:bg-primary/90 transition-all duration-300 flex flex-col items-center">
+          <i class="fa fa-balance-scale text-2xl mb-2"></i>
+          <span>实验一：不同质量小球</span>
+          <span class="text-xs mt-1" id="exp1-status">未完成</span>
+        </button>
+        <button id="exp2-btn" class="exp-btn bg-secondary text-white py-3 px-6 rounded-lg shadow-soft hover:bg-secondary/90 transition-all duration-300 flex flex-col items-center">
+          <i class="fa fa-sliders text-2xl mb-2"></i>
+          <span>实验二：不同斜面角度</span>
+          <span class="text-xs mt-1" id="exp2-status">未完成</span>
+        </button>
+        <button id="exp3-btn" class="exp-btn bg-accent text-white py-3 px-6 rounded-lg shadow-soft hover:bg-accent/90 transition-all duration-300 flex flex-col items-center">
+          <i class="fa fa-tint text-2xl mb-2"></i>
+          <span>实验三：不同摩擦系数</span>
+          <span class="text-xs mt-1" id="exp3-status">未完成</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 实验区域 -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- 实验模拟区 -->
+      <div class="lg:col-span-2 bg-white rounded-xl shadow-soft overflow-hidden">
+        <div class="p-4 bg-primary/10 border-b border-primary/20">
+          <h2 id="exp-title" class="text-xl font-bold text-primary">实验一：不同质量小球沿斜面下滑</h2>
+        </div>
+        <div class="p-4">
+          <!-- 物理实验容器 -->
+          <div class="relative w-full h-[480px] overflow-hidden bg-gray-100 rounded-lg" id="experiment-container">
+            <!-- 缩放容器 -->
+            <div id="scale-container" class="absolute top-0 left-0 transition-transform duration-300 ease-out" style="transform-origin: left bottom; transform: scale(1); width: 100%; height: 100%;">
+              <!-- 水平面 -->
+              <div class="absolute bottom-0 left-0 right-0 h-[140px] bg-gray-200 border-t border-gray-300" id="horizontal-plane"></div>
+              
+              <!-- 三角形斜面 -->
+              <div id="ramp" class="absolute w-[360px] triangle-ramp transition-all duration-500 ramp-medium-friction"></div>
+              
+              <!-- 小球 -->
+              <div id="ball" class="absolute w-8 h-8 bg-primary rounded-full shadow-md z-20"></div>
+              
+              <!-- 运动轨迹标记容器 -->
+              <div id="trail-container" class="absolute inset-0 pointer-events-none"></div>
+              
+              <!-- 距离标记线 -->
+              <div id="distance-markers" class="absolute h-0.5">
+                <!-- 动态生成标记线 -->
+              </div>
+            </div>
+            
+            <!-- 控制按钮 -->
+            <button id="start-btn" class="absolute top-4 right-4 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg shadow transition-all duration-300 z-10">
+              <i class="fa fa-play mr-1"></i> 开始实验
+            </button>
+            
+            <button id="reset-btn" class="absolute top-4 right-24 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg shadow transition-all duration-300 z-10">
+              <i class="fa fa-refresh mr-1"></i> 重置
+            </button>
+            
+            <!-- 当前状态显示 -->
+            <div class="absolute top-4 left-4 bg-white/80 backdrop-blur-sm p-2 rounded-lg shadow z-10">
+              <div>时间: <span id="time-display">0.0s</span></div>
+              <div>距离: <span id="distance-display">0.00m</span></div>
+              <div>速度: <span id="velocity-display">0.00m/s</span></div>
+            </div>
+            
+            <!-- 缩放指示器 -->
+            <div id="zoom-indicator" class="absolute bottom-4 right-4 bg-white/80 backdrop-blur-sm px-2 py-1 rounded text-sm shadow z-10 hidden">
+              <i class="fa fa-search-minus mr-1"></i> <span id="zoom-level">100%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 控制面板和数据区 -->
+      <div class="lg:col-span-1 flex flex-col gap-8">
+        <!-- 控制面板 -->
+        <div class="bg-white rounded-xl shadow-soft p-6">
+          <h3 class="text-lg font-bold mb-4 text-primary border-b pb-2">实验参数</h3>
+          <div id="control-panel">
+            <!-- 实验一控制面板 -->
+            <div id="exp1-controls" class="exp-controls">
+              <div class="mb-4">
+                <label class="block mb-2 text-sm font-medium">小球质量 (kg)</label>
+                <input type="range" id="mass-control" min="0.1" max="2" step="0.1" value="1" 
+                  class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary">
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>0.1 kg</span>
+                  <span id="mass-value">1 kg</span>
+                  <span>2 kg</span>
+                </div>
+              </div>
+              <div class="mb-4">
+                <label class="block mb-2 text-sm font-medium">斜面角度</label>
+                <div class="bg-gray-100 p-2 rounded text-center">30° (固定)</div>
+              </div>
+              <div class="mb-4">
+                <label class="block mb-2 text-sm font-medium">摩擦系数</label>
+                <div class="bg-gray-100 p-2 rounded text-center">0.2 (固定)</div>
+              </div>
+            </div>
+            
+            <!-- 实验二控制面板 -->
+            <div id="exp2-controls" class="exp-controls hidden">
+              <div class="mb-4">
+                <label class="block mb-2 text-sm font-medium">小球质量</label>
+                <div class="bg-gray-100 p-2 rounded text-center">1 kg (固定)</div>
+              </div>
+              <div class="mb-4">
+                <label class="block mb-2 text-sm font-medium">斜面角度</label>
+                <select id="angle-control" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary">
+                  <option value="60">60°</option>
+                  <option value="45">45°</option>
+                  <option value="30" selected>30°</option>
+                  <option value="15">15°</option>
+                </select>
+              </div>
+              <div class="mb-4">
+                <label class="block mb-2 text-sm font-medium">摩擦系数</label>
+                <div class="bg-gray-100 p-2 rounded text-center">0.2 (固定)</div>
+              </div>
+            </div>
+            
+            <!-- 实验三控制面板 -->
+            <div id="exp3-controls" class="exp-controls hidden">
+              <div class="mb-4">
+                <label class="block mb-2 text-sm font-medium">小球质量</label>
+                <div class="bg-gray-100 p-2 rounded text-center">1 kg (固定)</div>
+              </div>
+              <div class="mb-4">
+                <label class="block mb-2 text-sm font-medium">斜面角度</label>
+                <div class="bg-gray-100 p-2 rounded text-center">30° (固定)</div>
+              </div>
+              <div class="mb-4">
+                <label class="block mb-2 text-sm font-medium">摩擦系数</label>
+                <select id="friction-control" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary">
+                  <option value="0.5">0.5 (粗糙)</option>
+                  <option value="0.4">0.4</option>
+                  <option value="0.3">0.3</option>
+                  <option value="0.2" selected>0.2 (中等)</option>
+                  <option value="0.1">0.1</option>
+                  <option value="0.05">0.05 (光滑)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 运动数据记录 -->
+        <div class="bg-white rounded-xl shadow-soft p-6">
+          <h3 class="text-lg font-bold mb-4 text-primary border-b pb-2">运动数据记录</h3>
+          <div class="overflow-y-auto max-h-[150px] mb-4">
+            <table class="min-w-full text-sm">
+              <thead>
+                <tr class="bg-gray-100">
+                  <th class="py-2 px-3 text-left">时间 (s)</th>
+                  <th class="py-2 px-3 text-left">距离 (m)</th>
+                  <th class="py-2 px-3 text-left">速度 (m/s)</th>
+                </tr>
+              </thead>
+              <tbody id="motion-data">
+                <!-- 动态填充数据 -->
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- 数据图表 -->
+          <div class="h-[200px]">
+            <canvas id="data-chart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 实验结论题目 -->
+    <section id="quiz-section" class="mt-12 bg-white rounded-xl shadow-soft p-6 hidden">
+      <h2 class="text-xl font-bold mb-6 text-primary">实验结论测试</h2>
+      <div id="quiz-container">
+        <!-- 题目将动态生成 -->
+      </div>
+      <div class="mt-6 flex justify-center">
+        <button id="check-answer" class="bg-primary hover:bg-primary/90 text-white py-2 px-6 rounded-lg transition-all duration-300">
+          检查答案
+        </button>
+      </div>
+      <div id="answer-feedback" class="mt-4 text-center hidden"></div>
+    </section>
+    
+    <!-- 实验结论 -->
+    <section id="conclusion" class="mt-12 bg-white rounded-xl shadow-soft p-6 hidden">
+      <h2 class="text-xl font-bold mb-4 text-primary">实验结论</h2>
+      <div class="space-y-4">
+        <div>
+          <h3 class="font-bold text-lg">实验一结论：</h3>
+          <p>在斜面角度和摩擦系数固定的情况下，小球的质量不影响其下滑距离。这表明物体的运动状态与质量无关（忽略空气阻力）。</p>
+        </div>
+        <div>
+          <h3 class="font-bold text-lg">实验二结论：</h3>
+          <p>在质量和摩擦系数固定的情况下，斜面角度越大，小球下滑距离越远。这是因为角度越大，重力沿斜面向下的分力越大。</p>
+        </div>
+        <div>
+          <h3 class="font-bold text-lg">实验三结论：</h3>
+          <p>在质量和角度固定的情况下，摩擦系数越小，小球下滑距离越远。这表明摩擦力是阻碍物体运动的力。</p>
+        </div>
+        <div>
+          <h3 class="font-bold text-lg">总体结论：</h3>
+          <p>伽利略通过类似实验得出结论：如果没有摩擦力，小球将保持匀速直线运动。这一结论为牛顿第一定律（惯性定律）奠定了基础。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="bg-dark text-white py-8">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <div class="flex items-center space-x-2">
+            <i class="fa fa-flask text-primary text-xl"></i>
+            <span class="font-bold">伽利略斜面实验模拟</span>
+          </div>
+          <p class="text-sm text-gray-400 mt-1">基于现代Web技术的物理实验模拟器</p>
+        </div>
+        <div class="flex space-x-6">
+          <a href="#" class="text-gray-400 hover:text-white transition-all duration-300"><i class="fa fa-question-circle"></i> 帮助</a>
+          <a href="#" class="text-gray-400 hover:text-white transition-all duration-300"><i class="fa fa-info-circle"></i> 关于</a>
+          <a href="#" class="text-gray-400 hover:text-white transition-all duration-300"><i class="fa fa-envelope"></i> 联系我们</a>
+        </div>
+      </div>
+      <div class="mt-6 pt-6 border-t border-gray-700 text-center text-sm text-gray-400">
+        &copy; 2023 物理实验模拟器 | 版权所有
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // 全局变量
+    let currentExperiment = 1;
+    let isExperimentRunning = false;
+    let experimentData = {
+      1: { times: [], distances: [], velocities: [], completed: false },
+      2: { times: [], distances: [], velocities: [], completed: false },
+      3: { times: [], distances: [], velocities: [], completed: false }
+    };
+    let motionLog = [];
+    let chart = null;
+    let animationFrameId = null;
+    let lastRecordTime = 0;
+    let ballRadius = 4; // 小球半径(px)
+    let currentScale = 1; // 缩放比例
+    let baseRampLength = 360; // 基准斜面长度
+    
+    // DOM 元素
+    const ramp = document.getElementById('ramp');
+    const ball = document.getElementById('ball');
+    const startBtn = document.getElementById('start-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const massControl = document.getElementById('mass-control');
+    const massValue = document.getElementById('mass-value');
+    const angleControl = document.getElementById('angle-control');
+    const frictionControl = document.getElementById('friction-control');
+    const exp1Btn = document.getElementById('exp1-btn');
+    const exp2Btn = document.getElementById('exp2-btn');
+    const exp3Btn = document.getElementById('exp3-btn');
+    const exp1Controls = document.getElementById('exp1-controls');
+    const exp2Controls = document.getElementById('exp2-controls');
+    const exp3Controls = document.getElementById('exp3-controls');
+    const expTitle = document.getElementById('exp-title');
+    const quizSection = document.getElementById('quiz-section');
+    const quizContainer = document.getElementById('quiz-container');
+    const checkAnswerBtn = document.getElementById('check-answer');
+    const answerFeedback = document.getElementById('answer-feedback');
+    const motionData = document.getElementById('motion-data');
+    const trailContainer = document.getElementById('trail-container');
+    const timeDisplay = document.getElementById('time-display');
+    const distanceDisplay = document.getElementById('distance-display');
+    const velocityDisplay = document.getElementById('velocity-display');
+    const distanceMarkers = document.getElementById('distance-markers');
+    const conclusionSection = document.getElementById('conclusion');
+    const exp1Status = document.getElementById('exp1-status');
+    const exp2Status = document.getElementById('exp2-status');
+    const exp3Status = document.getElementById('exp3-status');
+    const experimentContainer = document.getElementById('experiment-container');
+    const horizontalPlane = document.getElementById('horizontal-plane');
+    const scaleContainer = document.getElementById('scale-container');
+    const zoomIndicator = document.getElementById('zoom-indicator');
+    const zoomLevel = document.getElementById('zoom-level');
+ 
+    // 通用的斜面角度变化处理函数
+    function updateRampAngleAndBallPosition(degrees) {
+        // 停止可能正在进行的实验
+        if (isExperimentRunning) {
+            resetExperiment();
+        }
+        // 应用新角度
+        setRampAngle(degrees);
+        // 等待斜面渲染完成后再更新小球位置
+        setTimeout(() => {
+            resetBallPosition();
+            createDistanceMarkers();
+        }, 50);
+    }
+    // 初始化
+    function init() {
+        // 应用初始实验设置
+        applyCurrentExperimentSettings();
+        // 创建距离标记
+        createDistanceMarkers();
+        // 初始化图表
+        initChart();
+        // 初始化按钮状态（重置按钮始终可用）
+        setButtonStates(false);
+        
+        // 事件监听
+        massControl.addEventListener('input', updateMassValue);
+        startBtn.addEventListener('click', startExperiment);
+        resetBtn.addEventListener('click', resetExperiment);
+        
+        // 实验二角度变化时特殊处理：小球自动归位
+        angleControl.addEventListener('change', () => {
+            const newAngle = parseInt(angleControl.value);
+            updateRampAngleAndBallPosition(newAngle);
+        });
+        
+        frictionControl.addEventListener('change', () => {
+            const newFriction = parseFloat(frictionControl.value);
+            updateRampFrictionAppearance(newFriction);
+            // 如果实验没有运行，更新小球位置
+            if (!isExperimentRunning) {
+                setTimeout(() => {
+                    resetBallPosition();
+                }, 50);
+            }
+        });
+        
+        exp1Btn.addEventListener('click', () => switchExperiment(1));
+        exp2Btn.addEventListener('click', () => switchExperiment(2));
+        exp3Btn.addEventListener('click', () => switchExperiment(3));
+        checkAnswerBtn.addEventListener('click', checkAnswer);
+        
+        // 初始显示小球
+        resetBallPosition();
+        
+        // 窗口大小变化时重新应用设置
+        window.addEventListener('resize', () => {
+            if (!isExperimentRunning) {
+                applyCurrentExperimentSettings();
+                resetBallPosition();
+                createDistanceMarkers();
+            }
+        });
+    }
+    
+    // 设置按钮状态（重置按钮始终可用）
+    function setButtonStates(isRunning, isCompleted = false) {
+        isExperimentRunning = isRunning;
+        if (isCompleted) {
+            // 实验完成状态：开始按钮禁用，重置按钮可用
+            startBtn.disabled = true;
+            startBtn.classList.add('opacity-70', 'cursor-not-allowed');
+            resetBtn.disabled = false;
+            resetBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+        } else if (isRunning) {
+            // 实验运行中：开始按钮禁用，重置按钮可用
+            startBtn.disabled = true;
+            startBtn.classList.add('opacity-70', 'cursor-not-allowed');
+            resetBtn.disabled = false;
+            resetBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+        } else {
+            // 实验未开始：开始按钮可用，重置按钮可用
+            startBtn.disabled = false;
+            startBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+            resetBtn.disabled = false;
+            resetBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+        }
+    }
+    
+    // 应用当前实验的斜面设置
+    function applyCurrentExperimentSettings() {
+      let angle, friction;
+      
+      switch(currentExperiment) {
+        case 1:
+          angle = 30;
+          friction = 0.2;
+          break;
+        case 2:
+          angle = parseInt(angleControl.value);
+          friction = 0.2;
+          break;
+        case 3:
+          angle = 30;
+          friction = parseFloat(frictionControl.value);
+          break;
+      }
+      
+      setRampAngle(angle);
+      updateRampFrictionAppearance(friction);
+    }
+    
+    // 根据摩擦系数更新斜面外观
+    function updateRampFrictionAppearance(friction) {
+      ramp.classList.remove('ramp-high-friction', 'ramp-medium-friction', 'ramp-low-friction');
+      if (friction >= 0.4) {
+        ramp.classList.add('ramp-high-friction');
+      } else if (friction >= 0.1) {
+        ramp.classList.add('ramp-medium-friction');
+      } else {
+        ramp.classList.add('ramp-low-friction');
+      }
+    }
+    
+    // 创建距离标记
+    function createDistanceMarkers() {
+      distanceMarkers.innerHTML = '';
+      const containerWidth = experimentContainer.offsetWidth;
+      const rampRect = ramp.getBoundingClientRect();
+      const containerRect = scaleContainer.getBoundingClientRect();
+      const horizontalPlaneHeight = horizontalPlane.offsetHeight;
+      
+      const rampLeft = rampRect.left - containerRect.left;
+      const maxDistance = containerWidth * 2;
+      const markerCount = 15;
+      
+      distanceMarkers.style.left = `${rampLeft}px`;
+      distanceMarkers.style.bottom = `${horizontalPlaneHeight - 4}px`;
+      
+      for (let i = 0; i <= markerCount; i++) {
+        const marker = document.createElement('div');
+        const position = i * maxDistance / markerCount;
+        
+        marker.className = 'absolute w-0.5 h-4 bg-gray-500';
+        marker.style.left = `${position}px`;
+        marker.style.bottom = '0';
+        
+        const label = document.createElement('div');
+        label.className = 'text-xs text-gray-600';
+        label.style.position = 'absolute';
+        label.style.left = `${position - 8}px`;
+        label.style.bottom = '-16px';
+        label.textContent = `${i}m`;
+        marker.appendChild(label);
+        
+        distanceMarkers.appendChild(marker);
+      }
+    }
+    
+    // 初始化图表
+    function initChart() {
+      const ctx = document.getElementById('data-chart').getContext('2d');
+      
+      if (chart) chart.destroy();
+      
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: '运动距离 (m)',
+            data: [],
+            borderColor: '#3B82F6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 2,
+            tension: 0.2,
+            fill: true,
+            yAxisID: 'y'
+          }, {
+            label: '速度 (m/s)',
+            data: [],
+            borderColor: '#F59E0B',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            tension: 0.2,
+            fill: false,
+            yAxisID: 'y1'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { title: { display: true, text: '时间 (s)' }, min: 0 },
+            y: { type: 'linear', position: 'left', title: { display: true, text: '距离 (m)' }, min: 0 },
+            y1: { type: 'linear', position: 'right', title: { display: true, text: '速度 (m/s)' }, min: 0, grid: { drawOnChartArea: false } }
+          }
+        }
+      });
+    }
+    
+    // 更新图表
+    function updateChart() {
+      if (!chart) return;
+      
+      const data = experimentData[currentExperiment];
+      chart.data.labels = data.times.map(t => t.toFixed(1));
+      chart.data.datasets[0].data = [...data.distances];
+      chart.data.datasets[1].data = [...data.velocities];
+      chart.update();
+    }
+    
+    // 切换实验
+    function switchExperiment(expNum) {
+        // 强制重置当前状态
+        resetExperiment();
+        currentExperiment = expNum;
+        
+        [exp1Btn, exp2Btn, exp3Btn].forEach((btn, index) => {
+            if (index + 1 === expNum) {
+                btn.classList.add('ring-2', 'ring-offset-2', 'ring-primary/50');
+            } else {
+                btn.classList.remove('ring-2', 'ring-offset-2', 'ring-primary/50');
+            }
+        });
+        
+        [exp1Controls, exp2Controls, exp3Controls].forEach(ctrl => ctrl.classList.add('hidden'));
+        
+        switch(expNum) {
+            case 1:
+                exp1Controls.classList.remove('hidden');
+                expTitle.textContent = '实验一：不同质量小球沿斜面下滑';
+                break;
+            case 2:
+                exp2Controls.classList.remove('hidden');
+                expTitle.textContent = '实验二：不同斜面角度下小球下滑';
+                break;
+            case 3:
+                exp3Controls.classList.remove('hidden');
+                expTitle.textContent = '实验三：不同摩擦系数下小球下滑';
+                break;
+        }
+        
+        applyCurrentExperimentSettings();
+        resetBallPosition();
+        createDistanceMarkers();
+        quizSection.classList.add('hidden');
+        
+        // 确保按钮状态正确 - 切换实验后开始按钮可用
+        setButtonStates(false);
+    }
+    
+    // 设置斜面角度
+    function setRampAngle(degrees) {
+        const angleRad = degrees * Math.PI / 180;
+        const horizontalPlaneHeight = horizontalPlane.offsetHeight;
+        const containerHeight = experimentContainer.offsetHeight;
+        const maxHeight = containerHeight * 0.6;
+        
+        let rampLength, height;
+        if (degrees > 45) {
+            height = maxHeight;
+            rampLength = height / Math.tan(angleRad);
+        } else {
+            rampLength = baseRampLength * (1 - (45 - degrees) / 90);
+            height = rampLength * Math.tan(angleRad);
+            if (height > maxHeight) {
+                height = maxHeight;
+                rampLength = height / Math.tan(angleRad);
+            }
+        }
+        
+        ramp.style.bottom = horizontalPlaneHeight + 'px';
+        ramp.style.left = '10%';
+        ramp.style.width = `${rampLength}px`;
+        ramp.style.height = `${height}px`;
+        ramp.dataset.angle = degrees;
+        
+        // 更新小球位置
+        if (!isExperimentRunning) {
+            setTimeout(() => {
+                resetBallPosition();
+            }, 50);
+        }
+    }
+    
+    // 更新质量显示值
+    function updateMassValue() {
+      const mass = parseFloat(massControl.value);
+      massValue.textContent = `${mass.toFixed(1)} kg`;
+    }
+
+    // 重置小球位置
+    function resetBallPosition() {
+        trailContainer.innerHTML = '';
+        motionLog = [];
+        motionData.innerHTML = '';
+        lastRecordTime = 0;
+        
+        const wasCompleted = experimentData[currentExperiment].completed;
+        experimentData[currentExperiment] = {
+            times: [],
+            distances: [],
+            velocities: [],
+            completed: wasCompleted
+        };
+        initChart();
+        
+        timeDisplay.textContent = '0.0s';
+        distanceDisplay.textContent = '0.00m';
+        velocityDisplay.textContent = '0.00m/s';
+        
+        // 获取斜面角度
+        const angle = parseInt(ramp.dataset.angle || 30);
+        const angleRad = angle * Math.PI / 180;
+        
+        // 获取斜面尺寸和位置
+        const rampRect = ramp.getBoundingClientRect();
+        const containerRect = scaleContainer.getBoundingClientRect();
+        
+        // 计算斜面在容器内的相对位置（考虑缩放）
+        const rampLeft = (rampRect.left - containerRect.left) / currentScale;
+        const rampTop = (rampRect.top - containerRect.top) / currentScale;
+        const rampWidth = rampRect.width / currentScale;
+        const rampHeight = rampRect.height / currentScale;
+        
+        // 精确计算小球初始位置
+        // 小球应该从斜面顶端开始，且底部接触斜面
+        const ballDiameter = ball.offsetWidth / currentScale;
+        const ballRadius = ballDiameter / 2;
+        
+        // 斜面顶端的坐标（考虑小球半径）
+        // 使用向量方法计算，确保小球紧贴斜面
+        const rampLength = Math.sqrt(rampWidth * rampWidth + rampHeight * rampHeight);
+        const unitX = rampWidth / rampLength;
+        const unitY = rampHeight / rampLength;
+        
+        // 小球圆心位置：从斜面顶端沿斜面方向移动一个半径的距离
+        const centerX = rampLeft + ballRadius * unitX;
+        const centerY = rampTop + ballRadius * unitY;
+        
+        // 小球的左上角位置
+        const ballLeft = centerX - ballRadius;
+        const ballTop = centerY - ballRadius;
+        
+        ball.style.left = `${ballLeft}px`;
+        ball.style.top = `${ballTop}px`;
+        ball.style.display = 'block';
+        
+        // 清除所有轨迹标记
+        const markers = trailContainer.querySelectorAll('.trail-marker');
+        markers.forEach(marker => marker.remove());
+    }
+
+    
+    // 调整缩放比例
+    function adjustScale(scale) {
+      currentScale = scale;
+      scaleContainer.style.transform = `scale(${currentScale})`;
+      zoomLevel.textContent = `${Math.round(currentScale * 100)}%`;
+      zoomIndicator.classList.toggle('hidden', currentScale >= 1);
+    }
+    
+    // 重置缩放
+    function resetScale() {
+      adjustScale(1);
+    }
+    
+    // 检查小球位置并调整缩放
+    function checkAndAdjustScale(ballX) {
+      const containerWidth = experimentContainer.offsetWidth;
+      const ballRelativeX = ballX * currentScale;
+      
+      if (ballRelativeX > containerWidth * 0.8) {
+        const newScale = Math.max(0.3, currentScale * 0.95);
+        adjustScale(newScale);
+        return true;
+      }
+      
+      return false;
+    }
+    
+    // 记录运动数据
+    function recordMotionData(time, distance, velocity) {
+      const t = parseFloat(time.toFixed(1));
+      const d = parseFloat(distance.toFixed(2));
+      const v = parseFloat(velocity.toFixed(2));
+      
+      motionLog.push({ time: t, distance: d, velocity: v });
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="py-1 px-3 border-b">${t}</td>
+        <td class="py-1 px-3 border-b">${d}</td>
+        <td class="py-1 px-3 border-b">${v}</td>
+      `;
+      motionData.appendChild(row);
+      motionData.scrollTop = motionData.scrollHeight;
+      
+      experimentData[currentExperiment].times.push(t);
+      experimentData[currentExperiment].distances.push(d);
+      experimentData[currentExperiment].velocities.push(v);
+      
+      updateChart();
+    }
+    
+    // 创建轨迹标记
+    function createTrailMarker(x, y) {
+        const marker = document.createElement('div');
+        marker.className = 'trail-marker';
+        marker.style.left = `${x}px`;
+        marker.style.top = `${y}px`;
+        trailContainer.appendChild(marker);
+    }
+    
+    // 开始实验
+        function startExperiment() {
+        // 双重检查，防止重复启动
+        if (isExperimentRunning) return;
+        
+        // 关键修改：每次开始实验前都重置小球位置
+        resetBallPosition();
+        resetScale();
+        
+        // 设置按钮状态为运行中
+        setButtonStates(true);
+        
+        // 禁用控制面板
+        document.querySelectorAll('.exp-controls input, .exp-controls select').forEach(el => el.disabled = true);
+        
+        // 获取实验参数
+        let mass, angle, friction;
+        switch(currentExperiment) {
+            case 1:
+                mass = parseFloat(massControl.value);
+                angle = 30;
+                friction = 0.2;
+                break;
+            case 2:
+                mass = 1;
+                angle = parseInt(angleControl.value);
+                friction = 0.2;
+                break;
+            case 3:
+                mass = 1;
+                angle = 30;
+                friction = parseFloat(frictionControl.value);
+                break;
+        }
+        
+        const g = 9.8;
+        const angleRad = angle * Math.PI / 180;
+        const rampRect = ramp.getBoundingClientRect();
+        const rampLength = rampRect.width / 100; // 转换为米
+        const acceleration = g * (Math.sin(angleRad) - friction * Math.cos(angleRad));
+        const timeToBottom = Math.sqrt(2 * rampLength / acceleration);
+        const finalRampVelocity = acceleration * timeToBottom;
+        const horizontalDeceleration = g * friction;
+        const horizontalTime = finalRampVelocity / horizontalDeceleration;
+        const totalAnimationDuration = (timeToBottom + horizontalTime) * 1000;
+        
+        const startTime = performance.now();
+        const containerRect = scaleContainer.getBoundingClientRect();
+        
+        // 获取小球初始位置（从样式属性中读取）
+        const ballRect = ball.getBoundingClientRect();
+        const startX = (ballRect.left - containerRect.left) / currentScale;
+        const startY = (ballRect.top - containerRect.top) / currentScale;
+        
+        const rampWidth = rampRect.width / currentScale;
+        const rampHeightPx = rampRect.height / currentScale;
+        
+        // 动画函数
+        function animate(currentTime) {
+            // 如果已被重置，直接退出
+            if (!isExperimentRunning) return;
+            
+            const elapsedTime = currentTime - startTime;
+            const elapsedSeconds = elapsedTime / 1000;
+            
+            if (elapsedSeconds - lastRecordTime >= 0.1) {
+                lastRecordTime = elapsedSeconds;
+                let distance, velocity;
+                
+                if (elapsedSeconds <= timeToBottom) {
+                    distance = 0.5 * acceleration * elapsedSeconds * elapsedSeconds;
+                    velocity = acceleration * elapsedSeconds;
+                } else {
+                    const horizontalElapsed = elapsedSeconds - timeToBottom;
+                    distance = rampLength + (finalRampVelocity * horizontalElapsed - 0.5 * horizontalDeceleration * horizontalElapsed * horizontalElapsed);
+                    velocity = finalRampVelocity - horizontalDeceleration * horizontalElapsed;
+                }
+                
+                if (Math.floor(elapsedSeconds * 2) % 1 === 0) {
+                    recordMotionData(elapsedSeconds, distance, velocity);
+                }
+                
+                timeDisplay.textContent = `${elapsedSeconds.toFixed(1)}s`;
+                distanceDisplay.textContent = `${distance.toFixed(2)}m`;
+                velocityDisplay.textContent = `${velocity.toFixed(2)}m/s`;
+            }
+            
+            let currentX, currentY;
+            let onRamp = elapsedSeconds <= timeToBottom;
+            
+            if (onRamp) {
+                const distanceAlongRamp = 0.5 * acceleration * elapsedSeconds * elapsedSeconds;
+                const progress = distanceAlongRamp / rampLength;
+                currentX = startX + progress * rampWidth;
+                currentY = startY + progress * rampHeightPx;
+            } else {
+                const horizontalElapsed = elapsedSeconds - timeToBottom;
+                const distanceAlongHorizontal = finalRampVelocity * horizontalElapsed - 0.5 * horizontalDeceleration * horizontalElapsed * horizontalElapsed;
+                currentX = startX + rampWidth + (distanceAlongHorizontal * 100);
+                currentY = startY + rampHeightPx;
+            }
+            
+            checkAndAdjustScale(currentX);
+            ball.style.left = `${currentX}px`;
+            ball.style.top = `${currentY}px`;
+            
+            if (elapsedTime % 30 < 16) {
+                createTrailMarker(currentX, currentY);
+            }
+            
+            // 检查是否继续动画
+            if (elapsedTime < totalAnimationDuration) {
+                animationFrameId = requestAnimationFrame(animate);
+            } else {
+                // 动画正常结束
+                const totalDistance = rampLength + (finalRampVelocity * horizontalTime - 0.5 * horizontalDeceleration * horizontalTime * horizontalTime);
+                recordMotionData(timeToBottom + horizontalTime, totalDistance, 0);
+                experimentData[currentExperiment].completed = true;
+                updateExperimentStatus();
+
+                // 恢复按钮状态 - 实验结束后禁用开始按钮
+                setButtonStates(false, true);  // 注意：第二个参数 true 表示实验完成
+
+                // 启用控制面板
+                document.querySelectorAll('.exp-controls input, .exp-controls select').forEach(el => el.disabled = false);
+                showQuiz();
+                checkAllExperimentsCompleted();
+            }
+        }
+        
+        recordMotionData(0, 0, 0);
+        animationFrameId = requestAnimationFrame(animate);
+    }
+    
+    // 更新实验状态显示
+    function updateExperimentStatus() {
+        if (experimentData[1].completed) {
+            exp1Status.textContent = "已完成";
+            exp1Status.className = "text-xs mt-1 text-green-400";
+        }
+        if (experimentData[2].completed) {
+            exp2Status.textContent = "已完成";
+            exp2Status.className = "text-xs mt-1 text-green-400";
+        }
+        if (experimentData[3].completed) {
+            exp3Status.textContent = "已完成";
+            exp3Status.className = "text-xs mt-1 text-green-400";
+        }
+    }
+    
+    // 检查是否所有实验都已完成
+    function checkAllExperimentsCompleted() {
+      if (experimentData[1].completed && experimentData[2].completed && experimentData[3].completed) {
+        conclusionSection.classList.remove('hidden');
+      }
+    }
+    
+        // 重置实验（任何时候都能调用）
+        function resetExperiment() {
+            // 强制停止动画
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            
+            // 强制重置运行状态
+            setButtonStates(false);  // 重置后开始按钮重新可用
+            
+            // 重新应用当前实验设置
+            applyCurrentExperimentSettings();
+            
+            // 重置小球位置
+            resetBallPosition();
+            
+            // 重置缩放
+            resetScale();
+            
+            // 启用控制面板
+            document.querySelectorAll('.exp-controls input, .exp-controls select').forEach(el => el.disabled = false);
+        }
+    
+    // 显示测验
+    function showQuiz() {
+      quizSection.classList.remove('hidden');
+      
+      let question, options, correctAnswer;
+      
+      switch(currentExperiment) {
+        case 1:
+          question = "在斜面角度和摩擦系数固定的情况下，小球的质量与滚动距离的关系是：";
+          options = [
+            "质量越大，滚动距离越远",
+            "质量越小，滚动距离越远",
+            "质量不影响滚动距离",
+            "无法确定"
+          ];
+          correctAnswer = 2;
+          break;
+        case 2:
+          question = "在小球质量和摩擦系数固定的情况下，斜面角度与滚动距离的关系是：";
+          options = [
+            "角度越大，滚动距离越远",
+            "角度越小，滚动距离越远",
+            "角度不影响滚动距离",
+            "角度与距离成反比"
+          ];
+          correctAnswer = 0;
+          break;
+        case 3:
+          question = "在小球质量和斜面角度固定的情况下，摩擦系数与滚动距离的关系是：";
+          options = [
+            "摩擦系数越大，滚动距离越远",
+            "摩擦系数越小，滚动距离越远",
+            "摩擦系数不影响滚动距离",
+            "摩擦系数与距离成正比"
+          ];
+          correctAnswer = 1;
+          break;
+      }
+      
+      quizContainer.dataset.correctAnswer = correctAnswer;
+      
+      let html = `<div class="mb-4 font-medium">${question}</div><div class="space-y-2">`;
+      options.forEach((option, index) => {
+        html += `
+          <div class="flex items-center">
+            <input type="radio" id="option-${index}" name="quiz-option" value="${index}" class="mr-2 accent-primary">
+            <label for="option-${index}">${option}</label>
+          </div>
+        `;
+      });
+      html += `</div>`;
+      quizContainer.innerHTML = html;
+      answerFeedback.classList.add('hidden');
+    }
+    
+    // 检查答案
+    function checkAnswer() {
+      const selectedOption = document.querySelector('input[name="quiz-option"]:checked');
+      if (!selectedOption) {
+        alert('请选择一个答案');
+        return;
+      }
+      
+      const correctAnswer = parseInt(quizContainer.dataset.correctAnswer);
+      const userAnswer = parseInt(selectedOption.value);
+      
+      answerFeedback.classList.remove('hidden');
+      
+      if (userAnswer === correctAnswer) {
+        answerFeedback.className = 'mt-4 text-center text-green-600 font-medium';
+        answerFeedback.innerHTML = '<i class="fa fa-check-circle mr-1"></i> 恭喜，答案正确！';
+      } else {
+        answerFeedback.className = 'mt-4 text-center text-red-600 font-medium';
+        answerFeedback.innerHTML = '<i class="fa fa-times-circle mr-1"></i> 答案不正确，请再思考一下。';
+      }
+    }
+    
+    // 页面加载完成后初始化
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>

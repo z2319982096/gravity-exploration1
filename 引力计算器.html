@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>增强版引力计算器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            overflow: auto;
+            position: relative;
+            padding: 20px;
+        }
+        
+        /* 星空背景 */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+        }
+        
+        /* 日常生活背景 */
+        .daily-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .daily-bg.active {
+            opacity: 1;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px #4dabf7;
+        }
+        
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: flex;
+            width: 100%;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .controls {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(77, 171, 247, 0.3);
+        }
+        
+        .simulation {
+            flex: 2;
+            min-width: 500px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(77, 171, 247, 0.3);
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .formula {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.5);
+            background: white;
+        }
+        
+        .scenario-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .scenario-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .scenario-btn.active {
+            background: rgba(77, 171, 247, 0.3);
+            border-color: #4dabf7;
+        }
+        
+        .scenario-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .result {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.4rem;
+            margin-top: 20px;
+        }
+        
+        .ball {
+            position: absolute;
+            border-radius: 50%;
+            cursor: move;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            user-select: none;
+            transition: width 0.3s, height 0.3s;
+        }
+        
+        .ball1 {
+            background: radial-gradient(circle at 30% 30%, #ff6b6b, #c23636);
+            width: 60px;
+            height: 60px;
+            left: 150px;
+            top: 200px;
+        }
+        
+        .ball2 {
+            background: radial-gradient(circle at 30% 30%, #4dabf7, #1971c2);
+            width: 60px;
+            height: 60px;
+            left: 400px;
+            top: 200px;
+        }
+        
+        /* 星球样式 */
+        .planet {
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.7);
+        }
+        
+        .planet1 {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23ff8c00"/><circle cx="35" cy="35" r="10" fill="%23ff6b6b" opacity="0.7"/><circle cx="65" cy="30" r="8" fill="%23ff6b6b" opacity="0.7"/><circle cx="40" cy="65" r="12" fill="%23ff6b6b" opacity="0.7"/></svg>');
+        }
+        
+        .planet2 {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%234dabf7"/><circle cx="30" cy="30" r="8" fill="%231971c2" opacity="0.7"/><circle cx="60" cy="40" r="6" fill="%231971c2" opacity="0.7"/><circle cx="45" cy="65" r="10" fill="%231971c2" opacity="0.7"/></svg>');
+        }
+        
+        .force-line {
+            position: absolute;
+            height: 3px;
+            background: linear-gradient(to right, rgba(255, 107, 107, 0.7), rgba(77, 171, 247, 0.7));
+            transform-origin: 0 0;
+            z-index: -1;
+        }
+        
+        .info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(to right, #ff6b6b, #4dabf7);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .mass-display {
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+        
+        .comparison {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 900px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .simulation {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 添加返回首页按钮 -->
+    <div style="position: fixed; top: 20px; left: 20px; z-index: 1000;">
+        <a href="首页.html" style="display: inline-block; padding: 10px 20px; background: rgba(100, 255, 218, 0.2); color: #64ffda; text-decoration: none; border-radius: 5px; border: 1px solid #64ffda; transition: all 0.3s;">
+            <i class="fas fa-home" style="margin-right: 5px;"></i> 返回首页
+        </a>
+    </div>
+    
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-calculator"></i> 万有引力计算器</h1>
+            <p class="subtitle">基于牛顿万有引力定律 F = G × (m₁ × m₂) / r²</p>
+        </header>
+
+    <!-- 星空背景 -->
+    <div class="stars" id="stars"></div>
+    
+    <!-- 日常生活背景 -->
+    <div class="daily-bg" id="dailyBg"></div>
+    
+    <div class="container">
+        <h1>增强版引力计算器</h1>
+        <p class="subtitle">拖动小球/星球调整距离，实时计算引力大小</p>
+        
+        <div class="content">
+            <div class="controls">
+                <div class="scenario-selector">
+                    <div class="scenario-btn active" data-scenario="daily">日常生活</div>
+                    <div class="scenario-btn" data-scenario="cosmic">宇宙天体</div>
+                </div>
+                
+                <div class="formula">
+                    F = G × (m₁ × m₂) / r²
+                </div>
+                
+                <div class="input-group">
+                    <label for="mass1">第一个物体的质量</label>
+                    <input type="number" id="mass1" value="1000" min="1">
+                    <div class="mass-display" id="mass1-display">1000 kg</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="mass2">第二个物体的质量</label>
+                    <input type="number" id="mass2" value="500" min="1">
+                    <div class="mass-display" id="mass2-display">500 kg</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="distance">物体之间的距离 (m)</label>
+                    <input type="number" id="distance" readonly>
+                </div>
+                
+                <button id="reset">重置位置</button>
+                
+                <div class="result" id="result">
+                    <h3>引力计算结果</h3>
+                    <p>引力 F = <span id="forceValue">0</span> 牛顿</p>
+                    <p class="comparison">相当于 <span id="equivalentMass">0</span> 千克物体受到的重力</p>
+                </div>
+                
+                <div class="instructions">
+                    <p><strong>使用说明：</strong></p>
+                    <p>1. 拖动红色或蓝色小球/星球改变它们之间的距离</p>
+                    <p>2. 修改物体质量查看引力变化（物体大小会随质量变化）</p>
+                    <p>3. 引力线表示引力作用方向，线越粗引力越大</p>
+                    <p>4. 切换场景查看不同质量范围的引力效果</p>
+                </div>
+            </div>
+            
+            <div class="simulation" id="simulation">
+                <div class="info">
+                    <div>距离: <span id="distanceDisplay">0</span> 米</div>
+                    <div>引力: <span id="forceDisplay">0</span> 牛顿</div>
+                </div>
+                
+                <div class="ball ball1" id="ball1">
+                    <span>m₁</span>
+                </div>
+                
+                <div class="ball ball2" id="ball2">
+                    <span>m₂</span>
+                </div>
+                
+                <!-- 引力线将通过JS动态创建 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 创建星空背景
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const starCount = 200;
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                
+                // 随机位置
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                
+                // 随机大小 (1-3px)
+                const size = Math.random() * 2 + 1;
+                
+                // 随机透明度
+                const opacity = Math.random() * 0.7 + 0.3;
+                
+                star.style.left = `${x}%`;
+                star.style.top = `${y}%`;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.opacity = opacity;
+                
+                starsContainer.appendChild(star);
+            }
+        }
+        
+        // 初始化变量
+        let ball1, ball2;
+        let isDragging = false;
+        let currentBall = null;
+        let offsetX, offsetY;
+        let forceLine;
+        let currentScenario = 'daily';
+        
+        // 万有引力常数
+        const G = 6.67430e-11;
+        
+        // 场景配置
+        const scenarios = {
+            daily: {
+                name: '日常生活',
+                mass1: 1000,
+                mass2: 500,
+                minMass: 1,
+                maxMass: 10000,
+                unit: 'kg',
+                pixelToMeter: 0.1, // 1像素 = 0.1米
+                examples: [
+                    { name: '成年人 (70kg)', mass: 70 },
+                    { name: '小汽车 (1500kg)', mass: 1500 },
+                    { name: '大象 (5000kg)', mass: 5000 }
+                ]
+            },
+            cosmic: {
+                name: '宇宙天体',
+                mass1: 5.972e24, // 地球质量
+                mass2: 7.348e22, // 月球质量
+                minMass: 1e20,
+                maxMass: 1e30,
+                unit: 'kg',
+                pixelToMeter: 1e6, // 1像素 = 1000公里
+                examples: [
+                    { name: '月球 (7.35×10²² kg)', mass: 7.348e22 },
+                    { name: '地球 (5.97×10²⁴ kg)', mass: 5.972e24 },
+                    { name: '太阳 (1.99×10³⁰ kg)', mass: 1.989e30 }
+                ]
+            }
+        };
+        
+        // 初始化函数
+        function init() {
+            createStars();
+            
+            // 获取小球元素
+            ball1 = document.getElementById('ball1');
+            ball2 = document.getElementById('ball2');
+            
+            // 创建引力线
+            forceLine = document.createElement('div');
+            forceLine.classList.add('force-line');
+            document.getElementById('simulation').appendChild(forceLine);
+            
+            // 添加事件监听器
+            ball1.addEventListener('mousedown', startDrag);
+            ball2.addEventListener('mousedown', startDrag);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+            
+            document.getElementById('mass1').addEventListener('input', updateMass);
+            document.getElementById('mass2').addEventListener('input', updateMass);
+            document.getElementById('reset').addEventListener('click', resetPositions);
+            
+            // 场景切换事件
+            document.querySelectorAll('.scenario-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentScenario = this.getAttribute('data-scenario');
+                    switchScenario();
+                });
+            });
+            
+            // 初始计算
+            switchScenario();
+        }
+        
+        // 切换场景
+        function switchScenario() {
+            const scenario = scenarios[currentScenario];
+            
+            // 更新背景
+            const dailyBg = document.getElementById('dailyBg');
+            if (currentScenario === 'daily') {
+                dailyBg.classList.add('active');
+            } else {
+                dailyBg.classList.remove('active');
+            }
+            
+            // 更新质量输入框
+            document.getElementById('mass1').value = scenario.mass1;
+            document.getElementById('mass2').value = scenario.mass2;
+            document.getElementById('mass1').min = scenario.minMass;
+            document.getElementById('mass2').min = scenario.minMass;
+            document.getElementById('mass1').max = scenario.maxMass;
+            document.getElementById('mass2').max = scenario.maxMass;
+            
+            // 更新质量显示
+            updateMassDisplay();
+            
+            // 更新小球/星球样式
+            updateBallStyle();
+            
+            // 更新小球大小
+            updateBallSize();
+            
+            // 重新计算引力
+            calculateGravity();
+        }
+        
+        // 更新小球/星球样式
+        function updateBallStyle() {
+            if (currentScenario === 'cosmic') {
+                // 宇宙场景 - 使用星球样式
+                ball1.classList.add('planet', 'planet1');
+                ball2.classList.add('planet', 'planet2');
+                ball1.innerHTML = '';
+                ball2.innerHTML = '';
+            } else {
+                // 日常生活场景 - 使用小球样式
+                ball1.classList.remove('planet', 'planet1');
+                ball2.classList.remove('planet', 'planet2');
+                ball1.innerHTML = '<span>m₁</span>';
+                ball2.innerHTML = '<span>m₂</span>';
+            }
+        }
+        
+        // 更新质量显示
+        function updateMassDisplay() {
+            const mass1 = parseFloat(document.getElementById('mass1').value);
+            const mass2 = parseFloat(document.getElementById('mass2').value);
+            
+            document.getElementById('mass1-display').textContent = formatMass(mass1);
+            document.getElementById('mass2-display').textContent = formatMass(mass2);
+        }
+        
+        // 格式化质量显示
+        function formatMass(mass) {
+            if (currentScenario === 'cosmic' && mass >= 1e20) {
+                return mass.toExponential(2) + ' kg';
+            }
+            return mass + ' kg';
+        }
+        
+        // 更新小球大小
+        function updateBallSize() {
+            const mass1 = parseFloat(document.getElementById('mass1').value);
+            const mass2 = parseFloat(document.getElementById('mass2').value);
+            const scenario = scenarios[currentScenario];
+            
+            // 计算小球大小 - 使用对数关系，使大小变化更合理
+            const minSize = 10; // 最小大小
+            const maxSize = 100; // 最大大小
+            
+            // 使用对数计算大小，避免线性关系
+            const logMin = Math.log(scenario.minMass);
+            const logMax = Math.log(scenario.maxMass);
+            const logMass1 = Math.log(mass1);
+            const logMass2 = Math.log(mass2);
+            
+            // 计算大小比例
+            const ratio1 = (logMass1 - logMin) / (logMax - logMin);
+            const ratio2 = (logMass2 - logMin) / (logMax - logMin);
+            
+            // 计算最终大小
+            const size1 = minSize + (maxSize - minSize) * Math.pow(ratio1, 0.5);
+            const size2 = minSize + (maxSize - minSize) * Math.pow(ratio2, 0.5);
+            
+            ball1.style.width = `${size1}px`;
+            ball1.style.height = `${size1}px`;
+            ball2.style.width = `${size2}px`;
+            ball2.style.height = `${size2}px`;
+        }
+        
+        // 更新质量
+        function updateMass() {
+            updateMassDisplay();
+            updateBallSize();
+            calculateGravity();
+        }
+        
+        // 开始拖动
+        function startDrag(e) {
+            isDragging = true;
+            currentBall = e.target;
+            
+            const rect = currentBall.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            
+            currentBall.style.zIndex = 10;
+            e.preventDefault();
+        }
+        
+        // 拖动中
+        function drag(e) {
+            if (!isDragging) return;
+            
+            const simulation = document.getElementById('simulation');
+            const simRect = simulation.getBoundingClientRect();
+            
+            // 计算新位置
+            let newX = e.clientX - simRect.left - offsetX;
+            let newY = e.clientY - simRect.top - offsetY;
+            
+            // 限制在模拟区域内
+            newX = Math.max(0, Math.min(newX, simRect.width - currentBall.offsetWidth));
+            newY = Math.max(0, Math.min(newY, simRect.height - currentBall.offsetHeight));
+            
+            // 应用新位置
+            currentBall.style.left = `${newX}px`;
+            currentBall.style.top = `${newY}px`;
+            
+            // 重新计算引力
+            calculateGravity();
+        }
+        
+        // 停止拖动
+        function stopDrag() {
+            isDragging = false;
+            if (currentBall) {
+                currentBall.style.zIndex = '';
+                currentBall = null;
+            }
+        }
+        
+        // 计算引力
+        function calculateGravity() {
+            // 获取小球位置
+            const rect1 = ball1.getBoundingClientRect();
+            const rect2 = ball2.getBoundingClientRect();
+            const simRect = document.getElementById('simulation').getBoundingClientRect();
+            
+            // 计算中心点
+            const center1 = {
+                x: rect1.left + rect1.width/2 - simRect.left,
+                y: rect1.top + rect1.height/2 - simRect.top
+            };
+            
+            const center2 = {
+                x: rect2.left + rect2.width/2 - simRect.left,
+                y: rect2.top + rect2.height/2 - simRect.top
+            };
+            
+            // 计算距离（像素）
+            const distancePx = Math.sqrt(
+                Math.pow(center2.x - center1.x, 2) + 
+                Math.pow(center2.y - center1.y, 2)
+            );
+            
+            // 根据场景使用不同的像素到米的转换比例
+            const scenario = scenarios[currentScenario];
+            const distanceM = distancePx * scenario.pixelToMeter;
+            
+            // 获取质量
+            const mass1 = parseFloat(document.getElementById('mass1').value) || 0;
+            const mass2 = parseFloat(document.getElementById('mass2').value) || 0;
+            
+            // 计算引力
+            const force = G * (mass1 * mass2) / (distanceM * distanceM);
+            
+            // 更新引力线
+            updateForceLine(center1, center2, force);
+            
+            // 更新显示
+            document.getElementById('distance').value = distanceM.toFixed(2);
+            document.getElementById('distanceDisplay').textContent = distanceM.toFixed(2);
+            document.getElementById('forceDisplay').textContent = formatForce(force);
+            
+            document.getElementById('forceValue').textContent = formatForce(force);
+            document.getElementById('equivalentMass').textContent = formatForce(force / 9.8);
+        }
+        
+        // 格式化力的显示
+        function formatForce(force) {
+            if (force === 0) return '0';
+            if (force < 1e-6) {
+                return force.toExponential(4);
+            } else if (force < 1) {
+                return force.toFixed(8);
+            } else if (force < 1000) {
+                return force.toFixed(4);
+            } else {
+                return force.toExponential(4);
+            }
+        }
+        
+        // 更新引力线
+        function updateForceLine(center1, center2, force) {
+            const dx = center2.x - center1.x;
+            const dy = center2.y - center1.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // 计算线的角度
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            // 设置线的位置和角度
+            forceLine.style.left = `${center1.x}px`;
+            forceLine.style.top = `${center1.y}px`;
+            forceLine.style.width = `${distance}px`;
+            forceLine.style.transform = `rotate(${angle}deg)`;
+            
+            // 根据引力大小调整线的宽度
+            const maxForce = currentScenario === 'daily' ? 1e-5 : 1e20;
+            const lineWidth = Math.min(10, (force / maxForce) * 10);
+            forceLine.style.height = `${Math.max(2, lineWidth)}px`;
+            
+            // 根据引力大小调整线的透明度
+            const opacity = Math.min(1, force / maxForce);
+            forceLine.style.opacity = opacity;
+        }
+        
+        // 重置小球位置
+        function resetPositions() {
+            ball1.style.left = '150px';
+            ball1.style.top = '200px';
+            ball2.style.left = '400px';
+            ball2.style.top = '200px';
+            calculateGravity();
+        }
+        
+        // 初始化
+        window.onload = init;
+    </script>
+</body>
+</html>

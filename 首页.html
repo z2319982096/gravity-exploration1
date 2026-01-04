@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <title>引力探索</title>
+    <link rel="stylesheet" href=" https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css ">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0a192f;
+            color: #ccd6f6;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .question {
+            margin-bottom: 1rem;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .question.hidden {
+            opacity: 0;
+            transform: translateY(-20px);
+            height: 0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        /* 头部区域 */
+        header {
+            padding: 2rem 0;
+            border-bottom: 1px solid #233554;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo-icon {
+            color: #64ffda;
+            font-size: 2.5rem;
+        }
+        
+        .logo h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(90deg, #64ffda, #52d6f3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+        }
+        
+        .tagline {
+            font-size: 1.1rem;
+            color: #8892b0;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* 导航栏 - 桌面版 */
+        .desktop-nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .desktop-nav a {
+            color: #ccd6f6;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 0;
+            position: relative;
+            transition: color 0.3s;
+        }
+        
+        .desktop-nav a:hover {
+            color: #64ffda;
+        }
+        
+        .desktop-nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #64ffda;
+            transition: width 0.3s;
+        }
+        
+        .desktop-nav a:hover::after {
+            width: 100%;
+        }
+        
+        /* 汉堡菜单按钮 */
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: #64ffda;
+            font-size: 1.8rem;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        /* 移动端导航菜单 */
+        .mobile-nav {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 70%;
+            height: 100vh;
+            background: #112240;
+            transition: right 0.3s ease;
+            padding: 2rem;
+            z-index: 1000;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .mobile-nav.active {
+            right: 0;
+        }
+        
+        .mobile-nav ul {
+            list-style: none;
+            margin-top: 3rem;
+        }
+        
+        .mobile-nav li {
+            margin-bottom: 1.5rem;
+        }
+        
+        .mobile-nav a {
+            color: #ccd6f6;
+            text-decoration: none;
+            font-size: 1.2rem;
+            display: block;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #233554;
+        }
+        
+        .mobile-nav a:hover {
+            color: #64ffda;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #64ffda;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        /* 主要内容区域 */
+        main {
+            padding: 3rem 0;
+        }
+        
+        /* 三个阶段区域 */
+        .stages-section {
+            margin-bottom: 5rem;
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 2.5rem;
+            color: #ccd6f6;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 80px;
+            height: 3px;
+            background-color: #64ffda;
+        }
+        
+        .stages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        
+        .stage-card {
+            background-color: #112240;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid #233554;
+        }
+        
+        .stage-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .video-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #64ffda;
+        }
+        
+        /* 虚拟实验区域 */
+        .experiments-section {
+            margin-bottom: 5rem;
+        }
+        
+        .experiments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        
+        .experiment-card {
+            background-color: #112240;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid #233554;
+        }
+        
+        .experiment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .experiment-header {
+            padding: 1.5rem 1.5rem 0;
+        }
+        
+        .experiment-title {
+            font-size: 1.5rem;
+            color: #ccd6f6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .experiment-subtitle {
+            color: #52d6f3;
+            font-weight: 500;
+        }
+        
+        .experiment-content {
+            padding: 1.5rem;
+        }
+        
+        .experiment-description {
+            color: #a8b2d1;
+            margin-bottom: 1.5rem;
+        }
+        
+        .experiment-frame {
+            width: 100%;
+            height: 250px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            background-color: #0a192f;
+            border: 1px solid #233554;
+        }
+        
+        .experiment-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .experiment-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #64ffda;
+            color: #0a192f;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        
+        .btn:hover {
+            background-color: #52d6f3;
+            transform: translateY(-2px);
+        }
+        
+        .btn-fullscreen {
+            background-color: #233554;
+            color: #64ffda;
+        }
+        
+        .btn-fullscreen:hover {
+            background-color: #1e2a47;
+        }
+        
+        /* 课后练习区域 */
+        .exercises-section {
+            margin-bottom: 5rem;
+        }
+        
+        .exercises-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .exercise-card {
+            background-color: #112240;
+            border-radius: 10px;
+            padding: 1.5rem;
+            border: 1px solid #233554;
+        }
+        
+        .exercise-card h3 {
+            color: #64ffda;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .exercise-score {
+            background-color: #64ffda;
+            color: #0a192f;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        
+        /* 视频容器样式 */
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 1rem;
+            background-color: #0a192f;
+            border: 1px solid #233554;
+        }
+
+        .video-container iframe,
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .video-controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .video-controls .btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+        }
+        
+        .question {
+            margin-bottom: 1rem;
+        }
+        
+        .options {
+            list-style: none;
+            margin: 1rem 0;
+        }
+        
+        .options li {
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .options li:hover {
+            background: rgba(100, 255, 218, 0.1);
+        }
+        
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 0.8rem;
+            background: #0a192f;
+            border: 1px solid #233554;
+            border-radius: 5px;
+            color: #ccd6f6;
+            margin-top: 0.5rem;
+        }
+        
+        /* 页脚 */
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            border-top: 1px solid #233554;
+            margin-top: 3rem;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .stages-grid, .experiments-grid, .exercises-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .logo h1 {
+                font-size: 1.8rem;
+            }
+            
+            .video-container {
+                height: 150px;
+            }
+            
+            .experiment-frame {
+                height: 200px;
+            }
+            
+            .experiment-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            /* 在手机上显示汉堡菜单，隐藏桌面导航 */
+            .hamburger-btn {
+                display: block;
+                position: absolute;
+                top: 2rem;
+                right: 20px;
+            }
+            
+            .desktop-nav {
+                display: none;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .mobile-nav {
+                display: none;
+            }
+        }
+
+        /* 答题反馈样式 */
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: rgba(100, 255, 218, 0.1);
+            border-left: 3px solid #64ffda;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .final-score {
+            padding: 20px;
+            background-color: rgba(100, 255, 218, 0.05);
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid #64ffda;
+        }
+
+    </style>
+</head>
+<body>
+    <header class="container">
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-globe-americas"></i>
+            </div>
+            <div>
+                <h1>引力探索</h1>
+                <p class="tagline">从亚里士多德到爱因斯坦，探索引力理论的演变</p>
+            </div>
+        </div>
+        
+        <!-- 桌面导航 -->
+        <nav class="desktop-nav">
+            <ul>
+                <li><a href="#"><i class="fas fa-home"></i> 首页</a></li>
+                <li><a href="#stages"><i class="fas fa-history"></i> 认识阶段</a></li>
+                <li><a href="#experiments"><i class="fas fa-flask"></i> 虚拟实验</a></li>
+                <li><a href="#exercises"><i class="fas fa-pen"></i> 课后练习</a></li>
+                <li><a href="#"><i class="fas fa-question-circle"></i> 关于</a></li>
+            </ul>
+        </nav>
+        
+        <!-- 汉堡菜单按钮（只在手机上显示） -->
+        <button class="hamburger-btn" id="hamburgerBtn">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+    
+    <!-- 移动端导航菜单（只在手机上显示） -->
+    <div class="mobile-nav" id="mobileNav">
+        <button class="close-btn" id="closeBtn">
+            <i class="fas fa-times"></i>
+        </button>
+        <ul>
+            <li><a href="#"><i class="fas fa-home"></i> 首页</a></li>
+            <li><a href="#stages"><i class="fas fa-history"></i> 认识阶段</a></li>
+            <li><a href="#experiments"><i class="fas fa-flask"></i> 虚拟实验</a></li>
+            <li><a href="#exercises"><i class="fas fa-pen"></i> 课后练习</a></li>
+            <li><a href="#"><i class="fas fa-question-circle"></i> 关于</a></li>
+        </ul>
+    </div>
+    
+    <main class="container">
+        <section class="intro">
+            <h2>探索引力的奥秘</h2>
+            <p>
+                引力是宇宙中最基本的力量之一，从古代哲学思辨到现代时空几何，人类对引力的理解经历了三次革命性的飞跃。
+                本网站通过微课视频和虚拟实验，带您深入了解引力理论的发展历程。
+            </p>
+        </section>
+        
+        <section class="stages-section" id="stages">
+            <h2 class="section-title">引力认识的三个阶段</h2>
+            <div class="stages-grid">
+                <!-- 第一阶段 -->
+                <div class="stage-card">
+                    <div class="experiment-content">
+                        <h3 class="experiment-title">第一阶段：亚里士多德</h3>
+                        <p class="experiment-description">
+                            古希腊哲学家亚里士多德认为，重物下落是因为它们有"回归自然位置"的趋势。
+                        </p>
+                        <div class="video-container">
+                        <!-- 亚里士多德 -->
+                        <iframe id="video1" src=" https://player.bilibili.com/player.html?bvid=BV1bUijBHEa1&page=1&autoplay=0 "
+                        scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true">
+                        </iframe>
+                        <div class="video-controls">
+                            <button class="btn btn-fullscreen" onclick="toggleFullscreen('video1')">
+                                <i class="fas fa-expand"></i> 全屏
+                            </button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                
+                <!-- 第二阶段 -->
+                <div class="stage-card">
+                    <div class="experiment-content">
+                        <h3 class="experiment-title">第二阶段：伽利略与牛顿</h3>
+                        <p class="experiment-description">
+                            伽利略通过斜面实验推翻亚里士多德的观点，牛顿提出万有引力定律。
+                        </p>
+                <div class="video-container">
+                        <!-- 牛顿 -->
+                        <iframe id="video2" src=" https://player.bilibili.com/player.html?bvid=BV1h1ijBWEFU&page=1&autoplay=0 "
+                         scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true">
+                        </iframe>
+                        <div class="video-controls">
+                            <button class="btn btn-fullscreen" onclick="toggleFullscreen('video2')">
+                                <i class="fas fa-expand"></i> 全屏
+                            </button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                
+                <!-- 第三阶段 -->
+                <div class="stage-card">
+                    <div class="experiment-content">
+                        <h3 class="experiment-title">第三阶段：爱因斯坦</h3>
+                        <p class="experiment-description">
+                            爱因斯坦的广义相对论将引力解释为时空的几何弯曲。
+                        </p>
+                    <div class="video-container">
+                        <!-- 爱因斯坦 -->
+                        <iframe id="video3" src=" https://player.bilibili.com/player.html?bvid=BV1D1ijBpENZ&page=1&autoplay=0 " 
+                        scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true">
+                        </iframe>
+                        <div class="video-controls">
+                            <button class="btn btn-fullscreen" onclick="toggleFullscreen('video3')">
+                                <i class="fas fa-expand"></i> 全屏
+                            </button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="experiments-section" id="experiments">
+            <h2 class="section-title">虚拟实验</h2>
+            <div class="experiments-grid">
+                <!-- 万有引力计算器 -->
+                <div class="experiment-card">
+                    <div class="experiment-header">
+                        <h3 class="experiment-title">万有引力计算器</h3>
+                        <div class="experiment-subtitle">计算引力大小</div>
+                    </div>
+                    <div class="experiment-content">
+                        <p class="experiment-description">
+                            使用牛顿万有引力定律计算两个物体之间的引力大小。输入两个物体的质量和它们之间的距离，即可得到引力值。
+                        </p>
+                        <div class="experiment-frame">
+                            <iframe 
+                                src="引力计算器.html" 
+                                width="100%" 
+                                height="250" 
+                                frameborder="0"
+                                style="border-radius: 8px; border: 1px solid #233554;">
+                            </iframe>
+                        </div>
+                        <div class="experiment-buttons">
+                            <a href="引力计算器.html" class="btn"><i class="fas fa-play"></i> 开始实验</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 伽利略斜面实验 -->
+                <div class="experiment-card">
+                    <div class="experiment-header">
+                        <h3 class="experiment-title">伽利略斜面实验</h3>
+                        <div class="experiment-subtitle">探究运动规律</div>
+                    </div>
+                    <div class="experiment-content">
+                        <p class="experiment-description">
+                            模拟伽利略的斜面实验，观察小球在不同角度斜面上的运动情况，理解匀加速运动规律。
+                        </p>
+                        <div class="experiment-frame">
+                            <iframe 
+                                src="伽利略斜面实验.html" 
+                                width="100%" 
+                                height="250" 
+                                frameborder="0"
+                                style="border-radius: 8px; border: 1px solid #233554;">
+                            </iframe>
+                        </div>
+                        <div class="experiment-buttons">
+                            <a href="伽利略斜面实验.html" class="btn"><i class="fas fa-play"></i> 开始实验</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 课后练习区域 -->
+        <section class="exercises-section" id="exercises">
+            <h2 class="section-title">课后练习</h2>
+            
+            <!-- 第一阶段：亚里士多德 -->
+            <div class="exercise-card">
+                <h3><i class="fas fa-question-circle"></i> 第一阶段：亚里士多德 <span class="exercise-score" id="stage1-score">得分：0/100</span></h3>
+                
+                <div class="question" id="stage1-q1">
+                    <p>1. 亚里士多德认为物体下落的原因是什么？（20分）</p>
+                    <ul class="options">
+                        <li onclick="selectAnswer(this, 'stage1', 1, 'B')">A. 万有引力作用</li>
+                        <li onclick="selectAnswer(this, 'stage1', 1, 'B')">B. 回归自然位置的趋势</li>
+                        <li onclick="selectAnswer(this, 'stage1', 1, 'B')">C. 空气阻力推动</li>
+                        <li onclick="selectAnswer(this, 'stage1', 1, 'B')">D. 地球自转影响</li>
+                    </ul>
+                    <div class="feedback" id="stage1-feedback1" style="display: none;"></div>
+                </div>
+                
+                <div class="question hidden" id="stage1-q2" style="display: none;">
+                    <p>2. 亚里士多德的理论主要基于什么方法？（20分）</p>
+                    <ul class="options">
+                        <li onclick="selectAnswer(this, 'stage1', 2, 'A')">A. 观察和逻辑推理</li>
+                        <li onclick="selectAnswer(this, 'stage1', 2, 'A')">B. 实验验证</li>
+                        <li onclick="selectAnswer(this, 'stage1', 2, 'A')">C. 数学计算</li>
+                        <li onclick="selectAnswer(this, 'stage1', 2, 'A')">D. 仪器测量</li>
+                    </ul>
+                    <div class="feedback" id="stage1-feedback2" style="display: none;"></div>
+                </div>
+                
+                <div class="question hidden" id="stage1-q3" style="display: none;">
+                    <p>3. 亚里士多德认为重的物体比轻的物体下落速度？（20分）</p>
+                    <ul class="options">
+                        <li onclick="selectAnswer(this, 'stage1', 3, 'A')">A. 更快</li>
+                        <li onclick="selectAnswer(this, 'stage1', 3, 'A')">B. 更慢</li>
+                        <li onclick="selectAnswer(this, 'stage1', 3, 'A')">C. 一样快</li>
+                        <li onclick="selectAnswer(this, 'stage1', 3, 'A')">D. 无法比较</li>
+                    </ul>
+                    <div class="feedback" id="stage1-feedback3" style="display: none;"></div>
+                </div>
+                
+                <div class="question hidden" id="stage1-q4" style="display: none;">
+                    <p>4. 亚里士多德是哪国人？（20分）</p>
+                    <ul class="options">
+                        <li onclick="selectAnswer(this, 'stage1', 4, 'B')">A. 埃及人</li>
+                        <li onclick="selectAnswer(this, 'stage1', 4, 'B')">B. 古希腊人</li>
+                        <li onclick="selectAnswer(this, 'stage1', 4, 'B')">C. 罗马人</li>
+                        <li onclick="selectAnswer(this, 'stage1', 4, 'B')">D. 波斯人</li>
+                    </ul>
+                    <div class="feedback" id="stage1-feedback4" style="display: none;"></div>
+                </div>
+                
+                <div class="question hidden" id="stage1-q5" style="display: none;">
+                    <p>5. 亚里士多德的理论统治了科学界多少年？（20分）</p>
+                    <ul class="options">
+                        <li onclick="selectAnswer(this, 'stage1', 5, 'C')">A. 约500年</li>
+                        <li onclick="selectAnswer(this, 'stage1', 5, 'C')">B. 约1000年</li>
+                        <li onclick="selectAnswer(this, 'stage1', 5, 'C')">C. 约2000年</li>
+                        <li onclick="selectAnswer(this, 'stage1', 5, 'C')">D. 约3000年</li>
+                    </ul>
+                    <div class="feedback" id="stage1-feedback5" style="display: none;"></div>
+                </div>
+                
+                <div class="final-score hidden" id="stage1-final" style="display: none;">
+                    <h4 style="color: #64ffda; margin-top: 20px;">第一阶段答题完成！</h4>
+                    <p>你的得分是：<span id="stage1-total-score">0</span>/100分</p>
+                    <p id="stage1-result-text"></p>
+                </div>
+            </div>
+            
+            <!-- 第二阶段：伽利略与牛顿 -->
+            <div class="exercise-card">
+                <h3><i class="fas fa-question-circle"></i> 第二阶段：伽利略与牛顿 <span class="exercise-score" id="stage2-score">得分：0/100</span></h3>
+                
+                <div class="question" id="stage2-q1">
+                    <p>1. 牛顿万有引力定律的公式是？（20分）</p>
+                    <ul class="options">
+                        <li onclick="selectAnswer(this, 'stage2', 1, 'B')">A. F = ma</li>
+                        <li onclick="selectAnswer(this, 'stage2', 1, 'B')">B. F = G(m₁m₂/r²)</li>
+                        <li onclick="selectAnswer(this, 'stage2', 1, 'B')">C. E = mc²</li>
+                        <li onclick="selectAnswer(this, 'stage2', 1, 'B')">D. v = gt</li>
+                    </ul>
+                    <div class="feedback" id="stage2-feedback1" style="display: none;"></div>
+                </div>
+                
+                <div class="question hidden" id="stage2-q2" style="display: none;">
+                    <p>2. 伽利略通过什么实验推翻了亚里士多德的观点？（20分）</p>
+                    <ul class="options">
+                        <li onclick="selectAnswer(this, 'stage2', 2, 'B')">A. 自由落体实验</li>
+                        <li onclick="selectAnswer(this, 'stage1', 2, 'B')">B. 斜面实验</li>
+                        <li onclick="selectAnswer(this, 'stage2', 2, 'B')">C. 单摆实验</li>
+                        <li onclick="selectAnswer(this, 'stage2', 2, 'B')">D. 望远镜观测</li>
+                    </ul>
+                    <div class="feedback" id="stage2-feedback2" style="display: none;"></div>
+                </div>
+                
+                <div class="question hidden" id="stage2-q3" style="display: none;">
+                    <p>3. 牛顿第二定律的公式是？（20分）</p>
+                    <ul class="options">
+                        <li onclick="selectAnswer(this, 'stage2', 3, 'A')">A. F = ma</li>
+                        <li onclick="selectAnswer(this, 'stage2', 3, 'A')">B. F = G(m₁m₂/r²)</li>
+                        <li onclick="selectAnswer(this, 'stage2', 3, 'A')">C. E = mc²</li>
+                        <li onclick="selectAnswer(this, 'stage2', 3, 'A')">D. v = u + at</li>
+                    </ul>
+                    <div class="feedback" id="stage2-feedback3" style="display: none;"></div>
+                </div>
+                
+                <div class="question hidden" id="stage2-q4" style="display: none;">
+                    <p>4. 伽利略的发现为谁的理论奠定了基础？（20分）</p>
+                    <ul class="options">
+                        <li onclick="selectAnswer(this, 'stage2', 4, 'A')">A. 牛顿</li>
+                        <li onclick="selectAnswer(this, 'stage2', 4, 'A')">B. 爱因斯坦</li>
+                        <li onclick="selectAnswer(this, 'stage2', 4, 'A')">C. 哥白尼</li>
+                        <li onclick="selectAnswer(this, 'stage2', 4, 'A')">D. 开普勒</li>
+                    </ul>
+                    <div class="feedback" id="stage2-feedback4" style="display: none;"></div>
+                </div>
+                
+                <div class="question hidden" id="stage2-q5" style="display: none;">
+                    <p>5. 牛顿在哪一年发表了《自然哲学的数学原理》？（20分）</p>
+                    <ul class="options">
+                        <li onclick="selectAnswer(this, 'stage2', 5, 'C')">A. 1587年</li>
+                        <li onclick="selectAnswer(this, 'stage2', 5, 'C')">B. 1686年</li>
+                        <li onclick="selectAnswer(this, 'stage2', 5, 'C')">C. 1687年</li>
+                        <li onclick="selectAnswer(this, 'stage2', 5, 'C')">D. 1697年</li>
+                    </ul>
+                    <div class="feedback" id="stage2-feedback5" style="display: none;"></div>
+                </div>
+                
+                <div class="final-score hidden" id="stage2-final" style="display: none;">
+                    <h4 style="color: #64ffda; margin-top: 20px;">第二阶段答题完成！</h4>
+                    <p>你的得分是：<span id="stage2-total-score">0</span>/100分</p>
+                    <p id="stage2-result-text"></p>
+                </div>
+            </div>
+            
+            <!-- 第三阶段：爱因斯坦 -->
+            <div class="exercise-card">
+                <h3><i class="fas fa-question-circle"></i> 第三阶段：爱因斯坦 <span class="exercise-score" id="stage3-score">得分：0/100</span></h3>
+                
+                <div class="question" id="stage3-q1">
+                    <p>1. 广义相对论将引力解释为什么？（20分）</p>
+                    <ul class="options">
+                        <li onclick="selectAnswer(this, 'stage3', 1, 'B')">A. 一种超距作用力</li>
+                        <li onclick="selectAnswer(this, 'stage3', 1, 'B')">B. 时空的几何弯曲</li>
+                        <li onclick="selectAnswer(this, 'stage3', 1, 'B')">C. 量子纠缠效应</li>
+                        <li onclick="selectAnswer(this, 'stage3', 1, 'B')">D. 电磁相互作用</li>
+                    </ul>
+                    <div class="feedback" id="stage3-feedback1" style="display: none;"></div>
+                </div>
+                
+                <div class="question hidden" id="stage3-q2" style="display: none;">
+                    <p>2. 爱因斯坦在哪一年提出广义相对论？（20分）</p>
+                    <ul class="options">
+                        <li onclick="selectAnswer(this, 'stage3', 2, 'C')">A. 1905年</li>
+                        <li onclick="selectAnswer(this, 'stage3', 2, 'C')">B. 1911年</li>
+                        <li onclick="selectAnswer(this, 'stage3', 2, 'C')">C. 1915年</li>
+                        <li onclick="selectAnswer(this, 'stage3', 2, 'C')">D. 1921年</li>
+                    </ul>
+                    <div class="feedback" id="stage3-feedback2" style="display: none;"></div>
+                </div>
+                
+                <div class="question hidden" id="stage3-q3" style="display: none;">
+                    <p>3. 广义相对论预言了什么现象？（20分）</p>
+                    <ul class="options">
+                        <li onclick="selectAnswer(this, 'stage3', 3, 'A')">A. 引力透镜效应</li>
+                        <li onclick="selectAnswer(this, 'stage3', 3, 'A')">B. 量子纠缠</li>
+                        <li onclick="selectAnswer(this, 'stage3', 3, 'A')">C. 黑洞蒸发</li>
+                        <li onclick="selectAnswer(this, 'stage3', 3, 'A')">D. 暗物质</li>
+                    </ul>
+                    <div class="feedback" id="stage3-feedback3" style="display: none;"></div>
+                </div>
+                
+                <div class="question hidden" id="stage3-q4" style="display: none;">
+                    <p>4. 爱因斯坦获得诺贝尔奖是因为？（20分）</p>
+                    <ul class="options">
+                        <li onclick="selectAnswer(this, 'stage3', 4, 'B')">A. 相对论</li>
+                        <li onclick="selectAnswer(this, 'stage3', 4, 'B')">B. 光电效应</li>
+                        <li onclick="selectAnswer(this, 'stage3', 4, 'B')">C. 质能方程</li>
+                        <li onclick="selectAnswer(this, 'stage3', 4, 'B')">D. 宇宙常数</li>
+                    </ul>
+                    <div class="feedback" id="stage3-feedback4" style="display: none;"></div>
+                </div>
+                
+                <div class="question hidden" id="stage3-q5" style="display: none;">
+                    <p>5. 广义相对论在什么情况下与牛顿理论结果相近？（20分）</p>
+                    <ul class="options">
+                        <li onclick="selectAnswer(this, 'stage3', 5, 'A')">A. 弱引力场中</li>
+                        <li onclick="selectAnswer(this, 'stage3', 5, 'A')">B. 强引力场中</li>
+                        <li onclick="selectAnswer(this, 'stage3', 5, 'A')">C. 微观尺度</li>
+                        <li onclick="selectAnswer(this, 'stage3', 5, 'A')">D. 量子尺度</li>
+                    </ul>
+                    <div class="feedback" id="stage3-feedback5" style="display: none;"></div>
+                </div>
+                
+                <div class="final-score hidden" id="stage3-final" style="display: none;">
+                    <h4 style="color: #64ffda; margin-top: 20px;">第三阶段答题完成！</h4>
+                    <p>你的得分是：<span id="stage3-total-score">0</span>/100分</p>
+                    <p id="stage3-result-text"></p>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <div class="copyright">
+                &copy; 2026 引力探索教学网站 | 设计用于物理教学
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // 汉堡菜单功能
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const mobileNav = document.getElementById('mobileNav');
+        
+        // 打开移动菜单
+        hamburgerBtn.addEventListener('click', function() {
+            mobileNav.classList.add('active');
+        });
+        
+        // 关闭移动菜单
+        closeBtn.addEventListener('click', function() {
+            mobileNav.classList.remove('active');
+        });
+        
+        // 点击菜单链接后关闭菜单
+        const mobileLinks = mobileNav.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                mobileNav.classList.remove('active');
+            });
+        });
+        
+        // 平滑滚动到锚点
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href.startsWith('#')) {
+                    e.preventDefault();
+                    const targetId = href.substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
+        });
+        
+        // B站视频播放功能
+        function playBilibiliVideo(videoId) {
+            const iframe = document.getElementById(videoId);
+            if (iframe) {
+                // 获取B站播放器的API
+                const player = iframe.contentWindow;
+                
+                // 切换播放/暂停
+                const btn = iframe.parentElement.querySelector('.btn i');
+                if (btn.className.includes('fa-play')) {
+                    btn.className = 'fas fa-pause';
+                    // 发送播放命令到B站播放器
+                    iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                } else {
+                    btn.className = 'fas fa-play';
+                    // 发送暂停命令到B站播放器
+                    iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                }
+            }
+        }
+        
+        // 全屏功能
+        function toggleFullscreen(videoId) {
+            const video = document.getElementById(videoId);
+            const videoContainer = video.parentElement;
+            
+            if (!document.fullscreenElement) {
+                if (videoContainer.requestFullscreen) {
+                    videoContainer.requestFullscreen();
+                } else if (videoContainer.webkitRequestFullscreen) {
+                    videoContainer.webkitRequestFullscreen();
+                } else if (videoContainer.msRequestFullscreen) {
+                    videoContainer.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+        
+        // 监听全屏变化
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+        document.addEventListener('msfullscreenchange', updateFullscreenButton);
+        
+        function updateFullscreenButton() {
+            const fullscreenBtns = document.querySelectorAll('.btn-fullscreen i');
+            const isFullscreen = document.fullscreenElement || 
+                                document.webkitFullscreenElement || 
+                                document.msFullscreenElement;
+            
+            fullscreenBtns.forEach(btn => {
+                btn.className = isFullscreen ? 'fas fa-compress' : 'fas fa-expand';
+            });
+        }
+        
+        // 视频播放状态监听
+        document.querySelectorAll('video').forEach(video => {
+            video.addEventListener('play', function() {
+                this.parentElement.querySelector('.btn i').className = 'fas fa-pause';
+            });
+            
+            video.addEventListener('pause', function() {
+                this.parentElement.querySelector('.btn i').className = 'fas fa-play';
+            });
+        });
+        // 答题功能
+        let scores = {
+            stage1: 0,
+            stage2: 0,
+            stage3: 0
+        };
+
+        let currentQuestions = {
+            stage1: 1,
+            stage2: 1,
+            stage3: 1
+        };
+
+        function selectAnswer(element, stage, questionNum, correctAnswer) {
+            // 获取用户选择的答案
+            const userAnswer = element.textContent.charAt(0);
+            const feedbackId = `${stage}-feedback${questionNum}`;
+            const feedbackElement = document.getElementById(feedbackId);
+            const currentQuestionId = `${stage}-q${questionNum}`;
+            const currentQuestionElement = document.getElementById(currentQuestionId);
+            
+            // 清除所有选项的选中状态
+            const options = element.parentElement.querySelectorAll('li');
+            options.forEach(option => {
+                option.style.backgroundColor = '';
+                option.style.color = '';
+            });
+            
+            // 设置选中状态
+            element.style.backgroundColor = '#64ffda';
+            element.style.color = '#0a192f';
+            
+            // 检查答案
+            if (userAnswer === correctAnswer) {
+                // 答对了
+                scores[stage] += 20;
+                feedbackElement.innerHTML = '<span style="color: #64ffda;"><i class="fas fa-check-circle"></i> 恭喜你答对了！+20分</span>';
+                feedbackElement.style.display = 'block';
+            } else {
+                // 答错了
+                feedbackElement.innerHTML = '<span style="color: #ff6b6b;"><i class="fas fa-times-circle"></i> 答错了，正确答案是：' + correctAnswer + '</span>';
+                feedbackElement.style.display = 'block';
+            }
+            
+            // 更新得分显示
+            document.getElementById(`${stage}-score`).textContent = `得分：${scores[stage]}/100`;
+            
+            // 禁用当前题目的所有选项，防止重复点击
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+            });
+            
+            // 延迟1.5秒后隐藏当前题目并显示下一题
+            setTimeout(() => {
+                // 添加隐藏类，触发CSS过渡效果
+                if (currentQuestionElement) {
+                    currentQuestionElement.classList.add('hidden');
+                }
+                
+                // 延迟0.5秒后显示下一题（等待隐藏动画完成）
+                setTimeout(() => {
+                    const nextQuestionId = `${stage}-q${questionNum + 1}`;
+                    const nextQuestionElement = document.getElementById(nextQuestionId);
+                    
+                    if (nextQuestionElement) {
+                        // 还有下一题
+                        nextQuestionElement.style.display = 'block';
+                        // 等待一小段时间让display生效，然后移除hidden类
+                        setTimeout(() => {
+                            nextQuestionElement.classList.remove('hidden');
+                            // 滚动到下一题
+                            nextQuestionElement.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'center',
+                                inline: 'nearest'
+                            });
+                        }, 50);
+                    } else {
+                        // 所有题目都完成了
+                        const finalElement = document.getElementById(`${stage}-final`);
+                        const totalScoreElement = document.getElementById(`${stage}-total-score`);
+                        const resultTextElement = document.getElementById(`${stage}-result-text`);
+                        
+                        totalScoreElement.textContent = scores[stage];
+                        
+                        // 根据得分显示不同评价
+                        if (scores[stage] >= 80) {
+                            resultTextElement.textContent = '太棒了！你对这个阶段的知识掌握得很好！';
+                            resultTextElement.style.color = '#64ffda';
+                        } else if (scores[stage] >= 60) {
+                            resultTextElement.textContent = '不错！继续努力，你可以做得更好！';
+                            resultTextElement.style.color = '#ffd166';
+                        } else {
+                            resultTextElement.textContent = '需要再复习一下这个阶段的内容哦！';
+                            resultTextElement.style.color = '#ff6b6b';
+                        }
+                        
+                        // 显示最终得分区域
+                        finalElement.style.display = 'block';
+                        setTimeout(() => {
+                            finalElement.classList.remove('hidden');
+                            finalElement.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'center',
+                                inline: 'nearest'
+                            });
+                        }, 50);
+                    }
+                }, 500); // 等待隐藏动画完成
+            }, 1500); // 等待1.5秒显示反馈信息
+        }
+
+    </script>
+</body>
+</html>
